@@ -1,2 +1,2 @@
 # ImageVision
-Image vision &amp; border shadow demo written in Swift mixed with Objective-C.
+[Demo] Use iOS 17.0 Vision to generates an instance mask of salient objects that can be separated from the background & bezier path to draw custom border shadow
