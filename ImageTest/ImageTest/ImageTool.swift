@@ -80,7 +80,7 @@ public extension UIImage {
     @objc func shapeBezierPath(blur: CGFloat = 6, offset: CGFloat = 10, scale: CGFloat) -> UIBezierPath? {
         // create path from non-transparent points
         let points = nonTransparentPoints()
-        let count = 100
+        let count = 1000
 //        let topMostPoints = topMostPoints(points: points, count: count, blur: blur)
         let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur)
         let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur)
@@ -132,7 +132,7 @@ public extension UIImage {
 
         // create path from non-transparent points
 //        let points = nonTransparentPoints()
-//        let count = 100
+//        let count = 1000
 //        let topMostPoints = topMostPoints(points: points, count: count, blur: blur)
 //        let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur)
 //        let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur)
@@ -156,9 +156,9 @@ public extension UIImage {
         path.lineCapStyle = .round
         path.lineJoinStyle = .round
         context.setFillColor(UIColor.white.cgColor)
-        context.setStrokeColor(color.cgColor)
+//        context.setStrokeColor(color.cgColor)
         path.close()
-        path.stroke()
+//        path.stroke()
         path.fill()
         
         draw(
@@ -272,7 +272,7 @@ public extension UIImage {
         
         // create path from non-transparent points
         let points = nonTransparentPoints()
-        let count = 100
+        let count = 1000
         let topMostPoints = topMostPoints(points: points, count: count, blur: blur)
         let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur)
         let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur)
@@ -314,6 +314,12 @@ public extension UIImage {
         )
         
         let context2 = UIGraphicsGetCurrentContext()!
+        
+        context2.setShadow(
+            offset: offset,
+            blur: blur,
+            color: color.cgColor
+        )
         
         var outerPoints = [CGPoint]()
         let outerTopMostPoints = topMostPoints.map { return CGPoint(x: $0.x + blur, y: $0.y + blur - blur) }
@@ -438,7 +444,7 @@ public extension UIImage {
     }
     
     private func pixelMappingStep() -> Int {
-        return 5 * pixelScale()
+        return 1 * pixelScale()
     }
     
     private func nonTransparentPoints() -> [CGPoint] {
@@ -451,10 +457,10 @@ public extension UIImage {
         guard let data = dataProvider.data else { return [] }
         let pixelData = CFDataGetBytePtr(data)
         let step = pixelMappingStep()
-        for x in stride(from: 0, through: width, by: step) {
+        for x in stride(from: 0, to: width, by: step) {
             autoreleasepool {
                 var edgePoints: [CGPoint] = []
-                for y in stride(from: 0, through: height, by: step) {
+                for y in stride(from: 0, to: height, by: step) {
                     autoreleasepool {
                         let pixelInfo: Int = ((width * y) + x) * 4
                         
@@ -485,10 +491,10 @@ public extension UIImage {
         guard let data = dataProvider.data else { return ([], []) }
         let pixelData = CFDataGetBytePtr(data)
         let step = pixelMappingStep()
-        for y in stride(from: 0, through: height, by: step) {
+        for y in stride(from: 0, to: height, by: step) {
             autoreleasepool {
                 var edgePoints: [CGPoint] = []
-                for x in stride(from: 0, through: width, by: step) {
+                for x in stride(from: 0, to: width, by: step) {
                     autoreleasepool {
                         let pixelInfo: Int = ((width * y) + x) * 4
                         let alpha = pixelData?[pixelInfo + 3] ?? 0

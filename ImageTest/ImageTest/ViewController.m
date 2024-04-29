@@ -67,7 +67,7 @@
 }
 
 - (NSArray<NSString *> *)sampleImageNames {
-    return @[@"beach",@"girl"];
+    return @[@"beach",@"girl",@"gougou"];
 }
 
 typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
