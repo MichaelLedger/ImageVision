@@ -31,8 +31,8 @@
     
     self.view.backgroundColor = [UIColor whiteColor];
     UIImageView *iv = [[UIImageView alloc] initWithFrame:CGRectZero];
-    iv.layer.borderColor = [UIColor redColor].CGColor;
-    iv.layer.borderWidth = 0.5;
+//    iv.layer.borderColor = [UIColor redColor].CGColor;
+//    iv.layer.borderWidth = 0.5;
     iv.contentMode = UIViewContentModeScaleAspectFit;
     [self.view addSubview:iv];
     
@@ -67,7 +67,7 @@
 }
 
 - (NSArray<NSString *> *)sampleImageNames {
-    return @[@"beach",@"girl",@"gougou"];
+    return @[@"dog",@"beach",@"girl"];
 }
 
 typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
@@ -109,7 +109,7 @@ typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
     [self showToast];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         UIColor *shadowColor = [UIColor colorWithWhite:0 alpha:0.4];
-        CGFloat shadowBlur = 20.f;
+        CGFloat shadowBlur = 10.f;
         CGSize shadowOffset = CGSizeMake(5, 5);
         NSLog(@"render==begin==%zu==%zu", CGImageGetWidth(slazzerImg.CGImage), CGImageGetHeight(slazzerImg.CGImage));
         [Timestamp printTimestamp];

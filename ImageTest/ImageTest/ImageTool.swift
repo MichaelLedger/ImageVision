@@ -79,11 +79,12 @@ public extension UIImage {
     /// This will increase the size of the image to fit the shadow and the original image.
     @objc func shapeBezierPath(blur: CGFloat = 6, offset: CGFloat = 10, scale: CGFloat) -> UIBezierPath? {
         // create path from non-transparent points
-        let points = nonTransparentPoints()
-        let count = 1000
+//        let points = nonTransparentPoints()
+        let pointsV3 = nonTransparentPointsV3()//[leftPoints, rightPoints, topPoints, bottomPoints]
+        let count = edgePointsNum()
 //        let topMostPoints = topMostPoints(points: points, count: count, blur: blur)
-        let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur)
-        let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur)
+        let rightMostPoints = rightMostPoints(points: pointsV3.1, count: count, blur: blur)
+        let bottomMostPoints = bottomMostPoints(points: pointsV3.3, count: count, blur: blur)
 //        let leftMostPoints = leftMostPoints(points: points, count: count, blur: blur)
         
         var outerPoints = [CGPoint]()
@@ -132,7 +133,7 @@ public extension UIImage {
 
         // create path from non-transparent points
 //        let points = nonTransparentPoints()
-//        let count = 1000
+//        let count = edgePointsNum()
 //        let topMostPoints = topMostPoints(points: points, count: count, blur: blur)
 //        let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur)
 //        let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur)
@@ -271,12 +272,22 @@ public extension UIImage {
          */
         
         // create path from non-transparent points
-        let points = nonTransparentPoints()
-        let count = 1000
-        let topMostPoints = topMostPoints(points: points, count: count, blur: blur)
-        let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur)
-        let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur)
-        let leftMostPoints = leftMostPoints(points: points, count: count, blur: blur)
+//        let points = nonTransparentPoints()
+//        let pointsV3 = nonTransparentPointsV3() //[leftPoints, rightPoints, topPoints, bottomPoints]
+        let points = nonTransparentEdgePoints()
+        let count = edgePointsNum()
+        let topMostPoints = topMostPoints(points: points, count: count, blur: blur).sorted { p1, p2 in
+            return p1.x < p2.x
+        }
+        let rightMostPoints = rightMostPoints(points: points, count: count, blur: blur).sorted { p1, p2 in
+            return p1.y < p2.y
+        }
+        let bottomMostPoints = bottomMostPoints(points: points, count: count, blur: blur).sorted { p1, p2 in
+            return p1.x > p2.x
+        }
+        let leftMostPoints = leftMostPoints(points: points, count: count, blur: blur).sorted { p1, p2 in
+            return p1.y > p2.y
+        }
         var allPoints = [CGPoint]()
         allPoints.append(contentsOf: topMostPoints)
         allPoints.append(contentsOf: rightMostPoints)
@@ -318,7 +329,7 @@ public extension UIImage {
         context2.setShadow(
             offset: offset,
             blur: blur,
-            color: color.cgColor
+            color: UIColor(white: 0, alpha: 0.8).cgColor
         )
         
         var outerPoints = [CGPoint]()
@@ -371,12 +382,14 @@ public extension UIImage {
             shadowPoints.append(outerTopPoint)
         }
         
+        let customShadowColor = color//UIColor.white//test //color
+        
         let shadowPath = createBezierPath(from: shadowPoints)
-        shadowPath.lineWidth = 1
+        shadowPath.lineWidth = 2
         shadowPath.lineCapStyle = .round
         shadowPath.lineJoinStyle = .round
         shadowPath.close()
-        context2.setFillColor(color.cgColor)
+        context2.setFillColor(customShadowColor.cgColor)
         shadowPath.fill()
         
 //        let cgColors = [UIColor(white: 0, alpha: 0), UIColor(white: 0, alpha: 0.5)].map { $0.cgColor }
@@ -404,7 +417,13 @@ public extension UIImage {
 //        }
         let shadowTopMostPoints = outerTopMostPoints.reversed()
         shadowPoints2.append(contentsOf: shadowTopMostPoints)
-        let shadowLeftMostPoints = outerLeftMostPoints.reversed()
+        //avoid overlapping points
+//        let maxY: CGFloat = shadowTopMostPoints.max { p1, p2 in
+//            p1.y < p2.y
+//        }?.y ?? 0
+        let shadowLeftMostPoints = outerLeftMostPoints.reversed()/*.filter {
+            $0.y > maxY
+        }*/
         shadowPoints2.append(contentsOf: shadowLeftMostPoints)
         
 //        if let bottomMostPoint = outerBottomMostPoints.last {
@@ -413,7 +432,13 @@ public extension UIImage {
 //        }
         let shadowLeftLeastPoints = shadowLeftMostPoints.reversed().map { return CGPoint(x: $0.x + shadowOffsetTL, y: $0.y) }
         shadowPoints2.append(contentsOf: shadowLeftLeastPoints)
-        let shadowTopLeastPoints = shadowTopMostPoints.reversed().map { return CGPoint(x: $0.x, y: $0.y + shadowOffsetTL) }
+        //avoid overlapping points
+//        let maxX: CGFloat = shadowLeftLeastPoints.max { p1, p2 in
+//            p1.x < p2.x
+//        }?.x ?? 0
+        let shadowTopLeastPoints = shadowTopMostPoints.reversed().map { return CGPoint(x: $0.x, y: $0.y + shadowOffsetTL) }/*.filter { p in
+            p.x > maxX
+        }*/
         shadowPoints2.append(contentsOf: shadowTopLeastPoints)
 //        if let rightMostPoint = outerRightMostPoints.first {
 //            shadowPoints2.append(CGPointMake(rightMostPoint.x, rightMostPoint.y + shadowOffsetTL))
@@ -423,12 +448,11 @@ public extension UIImage {
 //            CGPoint(x: pt.x + originTL / 2, y: pt.y + originTL / 2)
 //        })
         let shadowPath2 = createBezierPath(from: shadowPoints2)
-        shadowPath2.lineWidth = 1
+        shadowPath2.lineWidth = 2
         shadowPath2.lineCapStyle = .round
         shadowPath2.lineJoinStyle = .round
-        shadowPath2.close()
-        context2.setFillColor(color.cgColor)
-//        shadowPath2.fill(with: .overlay, alpha: 0.5)
+//        shadowPath2.close()
+        context2.setFillColor(customShadowColor.cgColor)
         shadowPath2.fill()
 //        context2.setStrokeColor(UIColor.systemPink.cgColor)
 //        shadowPath2.stroke()
@@ -529,23 +553,140 @@ public extension UIImage {
         return (nonTransparentPointsL, nonTransparentPointsR)
     }
     
+    /// return [leftPoints, rightPoints, topPoints, bottomPoints]
+    private func nonTransparentPointsV3() -> ([CGPoint], [CGPoint], [CGPoint], [CGPoint]) {
+        guard let cgImage = cgImage else { return ([], [], [], []) }
+        let width = cgImage.width
+        let height = cgImage.height
+    
+        guard let dataProvider = cgImage.dataProvider else { return ([], [], [], []) }
+        guard let data = dataProvider.data else { return ([], [], [], []) }
+        
+        var nonTransparentPointsL: [CGPoint] = []
+        var nonTransparentPointsR: [CGPoint] = []
+        
+        let pixelData = CFDataGetBytePtr(data)
+        let step = pixelMappingStep()
+        
+        for y in stride(from: 0, to: height, by: step) {
+            autoreleasepool {
+                var edgePoints: [CGPoint] = []
+                for x in stride(from: 0, to: width, by: step) {
+                    autoreleasepool {
+                        let pixelInfo: Int = ((width * y) + x) * 4
+                        let alpha = pixelData?[pixelInfo + 3] ?? 0
+                        let r = pixelData?[pixelInfo + 0] ?? 0
+                        let g = pixelData?[pixelInfo + 1] ?? 0
+                        let b = pixelData?[pixelInfo + 2] ?? 0
+                        if alpha > 0,
+                           r > 0,
+                           g > 0,
+                           b > 0
+                        {
+                            edgePoints.append(CGPoint(x: CGFloat(x), y: CGFloat(y)))
+                        }
+                    }
+                }
+                if edgePoints.count > 1 {
+                    let leftEdgePoint = edgePoints.first!
+                    nonTransparentPointsL.append(leftEdgePoint)
+                    
+                    let rightEdgePoint = edgePoints.last!
+                    nonTransparentPointsR.append(rightEdgePoint)
+                }
+            }
+        }
+        
+        var nonTransparentPointsT: [CGPoint] = []
+        var nonTransparentPointsB: [CGPoint] = []
+        
+        for x in stride(from: 0, to: width, by: step) {
+            autoreleasepool {
+                var edgePoints: [CGPoint] = []
+                for y in stride(from: 0, to: height, by: step) {
+                    autoreleasepool {
+                        let pixelInfo: Int = ((width * y) + x) * 4
+                        let alpha = pixelData?[pixelInfo + 3] ?? 0
+                        let r = pixelData?[pixelInfo + 0] ?? 0
+                        let g = pixelData?[pixelInfo + 1] ?? 0
+                        let b = pixelData?[pixelInfo + 2] ?? 0
+                        if alpha > 0,
+                           r > 0,
+                           g > 0,
+                           b > 0
+                        {
+                            edgePoints.append(CGPoint(x: CGFloat(x), y: CGFloat(y)))
+                        }
+                    }
+                }
+                if edgePoints.count > 1 {
+                    let topEdgePoint = edgePoints.first!
+                    nonTransparentPointsT.append(topEdgePoint)
+                    
+                    let bottomEdgePoint = edgePoints.last!
+                    nonTransparentPointsB.append(bottomEdgePoint)
+                }
+            }
+        }
+
+        return (nonTransparentPointsL, nonTransparentPointsR, nonTransparentPointsT, nonTransparentPointsB)
+    }
+    
+    private func nonTransparentEdgePoints() -> [CGPoint] {
+        let points = nonTransparentPointsV3()
+        var edgePoints = [CGPoint]()
+        edgePoints.append(contentsOf: points.0)
+        edgePoints.append(contentsOf: points.1)
+        edgePoints.append(contentsOf: points.2)
+        edgePoints.append(contentsOf: points.3)
+        return edgePoints
+    }
+    
+    // The smaller, the smoother, but left more blank; too bigger may cause overlapping points
+    private func antiAliasing() -> CGFloat {
+        return 10//10//test
+    }
+    
+    // The bigger, the smoother, but cost more times
+    private func edgePointsNum() -> Int {
+        return 100//test
+    }
+    
     private func topMostPoints(points: [CGPoint], count: Int, blur: CGFloat) -> [CGPoint] {
         var finalPoints = [CGPoint]()
-//        let step = pixelMappingStep()
+        let pixelStep = pixelMappingStep()
+        let step = pixelStep
+        var last: CGPoint?// ensure smooth curve
         for i in 0..<count {
             autoreleasepool {
                 let origin = CGPoint(x: size.width / CGFloat(count) * CGFloat(i), y: 0)
-//                let fileter = points.filter { abs($0.x - origin.x) < CGFloat(step) * 2 }
-                var pt = points.min { p1, p2 in
+                var fileter: [CGPoint]
+                if let last {
+                    fileter = points.filter {
+                        abs($0.x - origin.x) < CGFloat(step) && abs($0.y - last.y) < CGFloat(pixelStep) * antiAliasing()
+                    }
+                } else {
+                    fileter = points.filter {
+                        abs($0.x - origin.x) < CGFloat(step)
+                    }
+                }
+                if fileter.count == 0 {//fallback
+                    fileter = points
+                }
+                var pt = fileter.min { p1, p2 in
                     let d1 = distanceBetweenPoints(point1: origin, point2: p1)
                     let d2 = distanceBetweenPoints(point1: origin, point2: p2)
                     return d1 < d2
                 } ?? .zero
-                pt.y -= blur
-                //origin
-                pt.x += blur
-                pt.y += blur
-                finalPoints.append(pt)
+                let same = finalPoints.first { $0.x - blur == pt.x }
+                if same == nil {// filter to have only 1 points
+                    last = CGPoint(x: pt.x, y: pt.y)
+                    pt.y -= blur
+                    //origin
+                    pt.x += blur
+                    pt.y += blur
+                    finalPoints.append(pt)
+                }
             }
         }
         return finalPoints
@@ -553,19 +694,39 @@ public extension UIImage {
     
     private func rightMostPoints(points: [CGPoint], count: Int, blur: CGFloat) -> [CGPoint] {
         var finalPoints = [CGPoint]()
+        let pixelStep = pixelMappingStep()
+        let step = pixelStep
+        var last: CGPoint?// ensure smooth curve
         for i in 0..<count {
             autoreleasepool {
                 let origin = CGPoint(x: size.width, y: size.height / CGFloat(count) * CGFloat(i))
-                var pt = points.min { p1, p2 in
+                var fileter: [CGPoint]
+                if let last {
+                    fileter = points.filter {
+                        abs($0.y - origin.y) < CGFloat(step) && abs($0.x - last.x) < CGFloat(pixelStep) * antiAliasing()
+                    }
+                } else {
+                    fileter = points.filter {
+                        abs($0.y - origin.y) < CGFloat(step)
+                    }
+                }
+                if fileter.count == 0 {//fallback
+                    fileter = points
+                }
+                var pt: CGPoint = fileter.min { p1, p2 in
                     let d1 = distanceBetweenPoints(point1: origin, point2: p1)
                     let d2 = distanceBetweenPoints(point1: origin, point2: p2)
                     return d1 < d2
                 } ?? .zero
-                pt.x += blur
-                //origin
-                pt.x += blur
-                pt.y += blur
-                finalPoints.append(pt)
+                let same = finalPoints.first { $0.x - 2 * blur == pt.x }
+                if same == nil {// filter to have only 1 points
+                    last = CGPoint(x: pt.x, y: pt.y)
+                    pt.x += blur
+                    //origin
+                    pt.x += blur
+                    pt.y += blur
+                    finalPoints.append(pt)
+                }
             }
         }
         return finalPoints
@@ -573,19 +734,39 @@ public extension UIImage {
     
     private func bottomMostPoints(points: [CGPoint], count: Int, blur: CGFloat) -> [CGPoint] {
         var finalPoints = [CGPoint]()
+        let pixelStep = pixelMappingStep()
+        let step = pixelStep
+        var last: CGPoint?// ensure smooth curve
         for i in 0..<count {
             autoreleasepool {
                 let origin = CGPoint(x: size.width / CGFloat(count) * CGFloat(count - i), y: size.height)
-                var pt = points.min { p1, p2 in
+                var fileter: [CGPoint]
+                if let last {
+                    fileter = points.filter {
+                        abs($0.x - origin.x) < CGFloat(step) && abs($0.y - last.y) < CGFloat(pixelStep) * antiAliasing()
+                    }
+                } else {
+                    fileter = points.filter {
+                        abs($0.x - origin.x) < CGFloat(step)
+                    }
+                }
+                if fileter.count == 0 {//fallback
+                    fileter = points
+                }
+                var pt = fileter.min { p1, p2 in
                     let d1 = distanceBetweenPoints(point1: origin, point2: p1)
                     let d2 = distanceBetweenPoints(point1: origin, point2: p2)
                     return d1 < d2
                 } ?? .zero
-                pt.y += blur
-                //origin
-                pt.x += blur
-                pt.y += blur
-                finalPoints.append(pt)
+                let same = finalPoints.first { $0.x - blur == pt.x }
+                if same == nil {// filter to have only 1 points
+                    last = CGPoint(x: pt.x, y: pt.y)
+                    pt.y += blur
+                    //origin
+                    pt.x += blur
+                    pt.y += blur
+                    finalPoints.append(pt)
+                }
             }
         }
         return finalPoints
@@ -593,19 +774,39 @@ public extension UIImage {
     
     private func leftMostPoints(points: [CGPoint], count: Int, blur: CGFloat) -> [CGPoint] {
         var finalPoints = [CGPoint]()
+        let pixelStep = pixelMappingStep()
+        let step = pixelStep
+        var last: CGPoint?// ensure smooth curve
         for i in 0..<count {
             autoreleasepool {
                 let origin = CGPoint(x: 0, y: size.height / CGFloat(count) * CGFloat(count - i))
-                var pt = points.min { p1, p2 in
+                var fileter: [CGPoint]
+                if let last {
+                    fileter = points.filter {
+                        abs($0.y - origin.y) < CGFloat(step) && abs($0.x - last.x) < CGFloat(pixelStep) * antiAliasing()
+                    }
+                } else {
+                    fileter = points.filter {
+                        abs($0.y - origin.y) < CGFloat(step)
+                    }
+                }
+                if fileter.count == 0 {//fallback
+                    fileter = points
+                }
+                var pt = fileter.min { p1, p2 in
                     let d1 = distanceBetweenPoints(point1: origin, point2: p1)
                     let d2 = distanceBetweenPoints(point1: origin, point2: p2)
                     return d1 < d2
                 } ?? .zero
-                pt.x -= blur
-                //origin
-                pt.x += blur
-                pt.y += blur
-                finalPoints.append(pt)
+                let same = finalPoints.first { $0.x - 2 * blur == pt.x }
+                if same == nil {// filter to have only 1 points
+                    last = CGPoint(x: pt.x, y: pt.y)
+                    pt.x -= blur
+                    //origin
+                    pt.x += blur
+                    pt.y += blur
+                    finalPoints.append(pt)
+                }
             }
         }
         return finalPoints
