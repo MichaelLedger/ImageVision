@@ -189,6 +189,7 @@ typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
     }
     self.slazzered = NO;
     self.bordered = NO;
+    self.iv.backgroundColor = UIColor.whiteColor;
     
     CGFloat ivWidth = self.view.bounds.size.width;
     CGSize destinateSize = CGSizeZero;
@@ -239,6 +240,7 @@ typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
     if (self.slazzered) {
         return;
     }
+    self.iv.backgroundColor = [UIColor colorWithRed:0 green:1 blue:0 alpha:0.5];
     __weak __typeof(self) weakSelf = self;
     [self slazzerImage:self.iv.image completion:^(BOOL success, UIImage * _Nullable slazzerImage) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
@@ -256,6 +258,7 @@ typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
     if (self.bordered) {
         return;
     }
+    self.iv.backgroundColor = [UIColor colorWithRed:0 green:1 blue:0 alpha:0.5];
     __weak __typeof(self) weakSelf = self;
     [self renderImageBorderPicture:self.iv.image completion:^(BOOL success, UIImage * _Nullable borderImage) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;
@@ -273,6 +276,7 @@ typedef void (^SampleImageBlock)(BOOL, UIImage * _Nullable);
     if (self.bordered) {
         return;
     }
+    self.iv.backgroundColor = [UIColor colorWithRed:0 green:1 blue:0 alpha:0.5];
     __weak __typeof(self) weakSelf = self;
     [self renderImageBorderPictureV2:self.iv.image completion:^(BOOL success, UIImage * _Nullable borderImage) {
         __strong __typeof(weakSelf) strongSelf = weakSelf;

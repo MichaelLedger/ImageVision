@@ -130,15 +130,6 @@ public extension UIImage {
             color: color.cgColor
         )
 
-        draw(
-            in: CGRect(
-                x: blur,
-                y: blur,
-                width: size.width,
-                height: size.height
-            )
-        )
-
         // create path from non-transparent points
 //        let points = nonTransparentPoints()
 //        let count = 100
@@ -164,11 +155,21 @@ public extension UIImage {
         path.lineWidth = 5
         path.lineCapStyle = .round
         path.lineJoinStyle = .round
-//        context.setFillColor(UIColor.blue.cgColor)
+        context.setFillColor(UIColor.white.cgColor)
         context.setStrokeColor(color.cgColor)
         path.close()
         path.stroke()
-//        path.fill()
+        path.fill()
+        
+        draw(
+            in: CGRect(
+                x: blur,
+                y: blur,
+                width: size.width,
+                height: size.height
+            )
+        )
+        
         let image = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
 
@@ -235,15 +236,6 @@ public extension UIImage {
 //            )
 //        )
         
-        draw(
-            in: CGRect(
-                x: blur,
-                y: blur,
-                width: size.width,
-                height: size.height
-            )
-        )
-        
         // Paint the View Blue before drawing the Semi-Circle
         //        context.setFillColor(UIColor.blue.cgColor)  // Set fill color
         //        CGContextFillRect(context, rect) // Fill rectangle using the context data
@@ -291,15 +283,24 @@ public extension UIImage {
         allPoints.append(contentsOf: bottomMostPoints)
         allPoints.append(contentsOf: leftMostPoints)
         
-//        let path = createBezierPath(from: allPoints)
-//        path.lineWidth = 5
-//        path.lineCapStyle = .round
-//        path.lineJoinStyle = .round
-        context.setFillColor(UIColor.green.withAlphaComponent(0.5).cgColor)
+        let path = createBezierPath(from: allPoints)
+        path.lineWidth = 5
+        path.lineCapStyle = .round
+        path.lineJoinStyle = .round
+        context.setFillColor(UIColor.white.cgColor)
 //        context.setStrokeColor(UIColor.orange.cgColor)
-//        path.close()
+        path.close()
 //        path.stroke()
-//        path.fill()
+        path.fill()
+        
+        draw(
+            in: CGRect(
+                x: blur,
+                y: blur,
+                width: size.width,
+                height: size.height
+            )
+        )
         
         var image = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
@@ -314,15 +315,6 @@ public extension UIImage {
         
         let context2 = UIGraphicsGetCurrentContext()!
         
-        image.draw(
-            in: CGRect(
-                x: blur,
-                y: blur,
-                width: image.size.width,
-                height: image.size.height
-            )
-        )
-        
         var outerPoints = [CGPoint]()
         let outerTopMostPoints = topMostPoints.map { return CGPoint(x: $0.x + blur, y: $0.y + blur - blur) }
         outerPoints.append(contentsOf: outerTopMostPoints)
@@ -334,14 +326,27 @@ public extension UIImage {
         outerPoints.append(contentsOf: outerLeftMostPoints)
         
         let path2 = createBezierPath(from: outerPoints)
-        path2.lineWidth = 2
+        path2.lineWidth = 0
         path2.lineCapStyle = .round
         path2.lineJoinStyle = .round
-//        context2.setStrokeColor(color.cgColor)
+//        context2.setStrokeColor(UIColor.blue.cgColor)
+        context2.setFillColor(UIColor.white.cgColor)
         path2.close()
 //        path2.stroke()
+        path2.fill()
         
-        let shadowOffsetRB: CGFloat = CGFloat(20 * pixelScale())
+        image.draw(
+            in: CGRect(
+                x: blur,
+                y: blur,
+                width: image.size.width,
+                height: image.size.height
+            )
+        )
+        
+        let shadowOffsetRB: CGFloat = CGFloat(blur * CGFloat(pixelScale()))
+        let shadowOffsetTL: CGFloat = shadowOffsetRB / 2.0
+        let shadowDiff = shadowOffsetRB - shadowOffsetTL
         var shadowPoints = [CGPoint]()
         let shadowRightMostPoints = outerRightMostPoints.dropFirst()
         shadowPoints.append(contentsOf: shadowRightMostPoints)
@@ -349,12 +354,14 @@ public extension UIImage {
         shadowPoints.append(contentsOf: shadowBottomMostPoints)
         if let outerLeftPoint = outerLeftMostPoints.first {
             shadowPoints.append(outerLeftPoint)
+            shadowPoints.append(CGPoint(x: outerLeftPoint.x + shadowDiff, y: outerLeftPoint.y))
         }
         let shadowBottomLeastPoints = outerBottomMostPoints.reversed().dropFirst().map { return CGPoint(x: $0.x, y: $0.y - shadowOffsetRB) }
         shadowPoints.append(contentsOf: shadowBottomLeastPoints)
         let shadowRightLeastPoints = outerRightMostPoints.reversed().dropLast().map { return CGPoint(x: $0.x - shadowOffsetRB, y: $0.y) }
         shadowPoints.append(contentsOf: shadowRightLeastPoints)
         if let outerTopPoint = outerTopMostPoints.last {
+            shadowPoints.append(CGPoint(x: outerTopPoint.x, y: outerTopPoint.y + shadowDiff))
             shadowPoints.append(outerTopPoint)
         }
         
@@ -364,7 +371,7 @@ public extension UIImage {
         shadowPath.lineJoinStyle = .round
         shadowPath.close()
         context2.setFillColor(color.cgColor)
-        shadowPath.fill(with: .overlay, alpha: 0.5)
+        shadowPath.fill()
         
 //        let cgColors = [UIColor(white: 0, alpha: 0), UIColor(white: 0, alpha: 0.5)].map { $0.cgColor }
 //        let colorSpace = CGColorSpaceCreateDeviceRGB()
@@ -385,7 +392,6 @@ public extension UIImage {
 //        context2.setStrokeColor(UIColor.yellow.cgColor)
 //        shadowPath.stroke()
         
-        let shadowOffsetTL: CGFloat = CGFloat(10 * pixelScale())
         var shadowPoints2 = [CGPoint]()
 //        if let rightMostPoint = outerRightMostPoints.first {
 //            shadowPoints2.append(rightMostPoint)
@@ -406,14 +412,18 @@ public extension UIImage {
 //        if let rightMostPoint = outerRightMostPoints.first {
 //            shadowPoints2.append(CGPointMake(rightMostPoint.x, rightMostPoint.y + shadowOffsetTL))
 //        }
-        
+//        let originTL = blur - shadowOffsetTL
+//        shadowPoints2 = shadowPoints2.map({ pt in
+//            CGPoint(x: pt.x + originTL / 2, y: pt.y + originTL / 2)
+//        })
         let shadowPath2 = createBezierPath(from: shadowPoints2)
         shadowPath2.lineWidth = 1
         shadowPath2.lineCapStyle = .round
         shadowPath2.lineJoinStyle = .round
         shadowPath2.close()
         context2.setFillColor(color.cgColor)
-        shadowPath2.fill(with: .overlay, alpha: 0.5)
+//        shadowPath2.fill(with: .overlay, alpha: 0.5)
+        shadowPath2.fill()
 //        context2.setStrokeColor(UIColor.systemPink.cgColor)
 //        shadowPath2.stroke()
         
